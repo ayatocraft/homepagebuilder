@@ -16,7 +16,6 @@ font-family:"Segoe UI";
 background:#f5f5f5;
 }
 
-/* HEADER */
 .header{
 height:160px;
 background:linear-gradient(135deg,#0078d4,#00a2ff);
@@ -36,7 +35,6 @@ outline:none;
 width:100%;
 }
 
-/* PAGE */
 .page{
 max-width:900px;
 margin:0 auto;
@@ -45,11 +43,11 @@ background:white;
 min-height:100vh;
 }
 
-/* TOOLBAR */
 .toolbar{
 display:flex;
 gap:10px;
 margin-bottom:10px;
+flex-wrap:wrap;
 }
 
 button{
@@ -65,15 +63,14 @@ button:hover{
 background:#005a9e;
 }
 
-/* BLOCKS */
 .block{
-padding:8px 0;
+margin-bottom:10px;
 }
 
 .input{
 width:100%;
-font-size:16px;
 padding:8px;
+font-size:16px;
 border:1px solid #ddd;
 border-radius:6px;
 outline:none;
@@ -87,7 +84,9 @@ margin-top:10px;
 
 a{
 color:#0078d4;
+word-break:break-all;
 }
+
 </style>
 </head>
 
@@ -108,11 +107,11 @@ localStorage.setItem("page_"+code,JSON.stringify(data));
 }
 
 function load(code){
-return JSON.parse(localStorage.getItem("page_"+code) || "null");
+return JSON.parse(localStorage.getItem("page_"+code)||"null");
 }
 
 /* =========================
-   BLOCK COMPONENTS (企業レベル設計)
+   BLOCKS
 ========================= */
 
 function TextBlock({value,onChange}){
@@ -194,17 +193,69 @@ const [blocks,setBlocks]=React.useState(saved?.blocks||[
 {type:"text",value:""}
 ]);
 
+const [editing,setEditing]=React.useState(!isView);
 const [publicUrl,setPublicUrl]=React.useState("");
 
-/* SAVE AUTO */
+/* =========================
+   AUTO SAVE
+========================= */
 React.useEffect(()=>{
 if(!code)return;
-
 save(code,{title,blocks});
-
 },[title,blocks]);
 
-/* PUBLISH */
+/* =========================
+   E KEY SWITCH
+========================= */
+React.useEffect(()=>{
+
+function onKey(e){
+
+const el=document.activeElement;
+const typing=
+el &&
+(el.tagName==="INPUT" ||
+el.tagName==="TEXTAREA");
+
+if(typing)return;
+
+if(e.key.toLowerCase()==="e"){
+setEditing(v=>!v);
+}
+}
+
+window.addEventListener("keydown",onKey);
+return ()=>window.removeEventListener("keydown",onKey);
+
+},[]);
+
+/* =========================
+   UPDATE BLOCK
+========================= */
+function updateBlock(i,value){
+const copy=[...blocks];
+copy[i].value=value;
+setBlocks(copy);
+}
+
+/* =========================
+   ADD BLOCKS
+========================= */
+function addText(){
+setBlocks([...blocks,{type:"text",value:""}]);
+}
+
+function addUrl(){
+setBlocks([...blocks,{type:"url",value:""}]);
+}
+
+function addImage(){
+setBlocks([...blocks,{type:"image",value:""}]);
+}
+
+/* =========================
+   PUBLISH
+========================= */
 function publish(){
 
 const newCode=code||Math.random().toString(36).slice(2);
@@ -217,29 +268,10 @@ setPublicUrl(url);
 location.search="?code="+newCode;
 }
 
-/* BLOCK UPDATE */
-function updateBlock(i,value){
-const copy=[...blocks];
-copy[i].value=value;
-setBlocks(copy);
-}
-
-/* ADD */
-function addText(){
-setBlocks([...blocks,{type:"text",value:""}]);
-}
-
-function addUrl(){
-setBlocks([...blocks,{type:"url",value:""}]);
-}
-
-/* ADD IMAGE */
-function addImage(){
-setBlocks([...blocks,{type:"image",value:""}]);
-}
-
-/* VIEW MODE */
-if(isView){
+/* =========================
+   VIEW MODE
+========================= */
+if(isView && !editing){
 
 return(
 <div>
@@ -253,11 +285,7 @@ return(
 {blocks.map((b,i)=>{
 
 if(b.type==="text"){
-return (
-<div key={i}>
-{b.value}
-</div>
-);
+return <div key={i}>{b.value}</div>;
 }
 
 if(b.type==="url"){
@@ -280,10 +308,11 @@ return (
 
 </div>
 );
-
 }
 
-/* EDIT MODE */
+/* =========================
+   EDIT MODE
+========================= */
 return(
 <div>
 
@@ -338,6 +367,18 @@ onChange={(v)=>updateBlock(i,v)}
 }
 
 })}
+
+{publicUrl && (
+<div style={{marginTop:10,display:"flex",gap:10}}>
+<input style={{flex:1}} value={publicUrl} readOnly/>
+<button onClick={()=>{
+navigator.clipboard.writeText(publicUrl);
+alert("コピー");
+}}>
+コピー
+</button>
+</div>
+)}
 
 </div>
 
