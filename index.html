@@ -371,6 +371,17 @@ React.useState(false);
 
 const [activeTab,setActiveTab] =
 React.useState(0);
+const [viewMode,setViewMode] = React.useState(false);
+
+React.useEffect(()=>{
+const params = new URLSearchParams(location.search);
+const code = params.get("code");
+
+if(code){
+setViewMode(true);
+setTabMode(true); // 強制閲覧UI
+}
+},[]);
 
 function createBuilder(id){
 
@@ -1057,48 +1068,34 @@ label:label || url
 
 function uploadFile(file){
 
-const url =
-URL.createObjectURL(file);
+const url = URL.createObjectURL(file);
 
-if(
-file.type.startsWith("image/")
-){
+const baseItem = {
+id:Math.random(),
+url,
+x:100,
+y:100
+};
 
+if(file.type.startsWith("image/")){
 setItems(prev=>[
 ...prev,
-{
-type:"image",
-url
-}
+{...baseItem,type:"image"}
 ]);
-
 }
 
-else if(
-file.type.startsWith("video/")
-){
-
+else if(file.type.startsWith("video/")){
 setItems(prev=>[
 ...prev,
-{
-type:"video",
-url
-}
+{...baseItem,type:"video"}
 ]);
-
 }
 
 else{
-
 setItems(prev=>[
 ...prev,
-{
-type:"file",
-url,
-name:file.name
-}
+{...baseItem,type:"file",name:file.name}
 ]);
-
 }
 
 }
