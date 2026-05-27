@@ -1,274 +1,332 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homepage Builder Desktop</title>
 
-<title>Homepage Builder</title>
-
-<!-- React -->
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-<!-- Fluent UI React -->
 <script src="https://unpkg.com/@fluentui/react@8/dist/fluentui-react.min.js"></script>
-
-<!-- Fluent UI Icons -->
-<script src="https://unpkg.com/@fluentui/font-icons-mdl2@8/dist/fluentui-icons.min.js"></script>
-
-<!-- Ably -->
 <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
 <style>
 
-html, body {
-    margin: 0;
-    padding: 0;
-    background: #f3f3f3;
-    font-family: "Segoe UI", sans-serif;
-    min-height: 100%;
-    -webkit-tap-highlight-color: transparent;
+html,body{
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:#1e1e1e;
+font-family:"Segoe UI";
 }
 
-#root {
-    min-height: 100vh;
+*{
+box-sizing:border-box;
 }
 
-* {
-    box-sizing: border-box;
+#root{
+width:100%;
+height:100%;
 }
 
-.topbar {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    height: 60px;
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
+.desktop{
+width:100%;
+height:100%;
+position:relative;
+overflow:hidden;
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 20px;
-    font-weight: 600;
+.window{
+position:absolute;
+background:white;
+border-radius:14px;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+border:1px solid #cfcfcf;
+box-shadow:0 10px 40px rgba(0,0,0,0.45);
 }
 
-.layout {
-    width: calc(100% - 24px);
-    max-width: 1450px;
-    margin: 18px auto;
-    display: flex;
-    gap: 20px;
-    align-items: start;
+.windowBar{
+height:42px;
+background:#f3f3f3;
+border-bottom:1px solid #ddd;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 10px;
+cursor:move;
+user-select:none;
 }
 
-.sidebar {
-    width: 360px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+.windowTitle{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:14px;
+font-weight:600;
 }
 
-.preview-area {
-    flex: 1;
+.windowBtns{
+display:flex;
+gap:4px;
 }
 
-.card {
-    background: white;
-    border-radius: 24px;
-    padding: 20px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+.windowBtn{
+width:32px;
+height:28px;
+border:none;
+background:transparent;
+border-radius:8px;
+cursor:pointer;
 }
 
-.card h2 {
-    margin-top: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 20px;
+.windowBtn:hover{
+background:#e5e5e5;
 }
 
-.site {
-    background: white;
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+.windowContent{
+flex:1;
+overflow:auto;
+background:#f5f5f5;
 }
 
-.header {
-    height: 320px;
-    position: relative;
-    background-size: cover;
-    background-position: center;
+.resize{
+position:absolute;
+right:0;
+bottom:0;
+width:16px;
+height:16px;
+cursor:nwse-resize;
 }
 
-.header-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.55));
-    display: flex;
-    align-items: end;
-    padding: 30px;
+.taskbar{
+position:absolute;
+left:0;
+right:0;
+bottom:0;
+height:52px;
+background:#202020;
+display:flex;
+align-items:center;
+gap:8px;
+padding:0 8px;
+z-index:99999;
 }
 
-.header-title {
-    color: white;
-    font-size: 46px;
-    font-weight: bold;
-    outline: none;
+.startBtn{
+width:46px;
+height:40px;
+border:none;
+border-radius:10px;
+background:#0078d4;
+color:white;
+cursor:pointer;
 }
 
-.content {
-    padding: 30px;
+.taskBtn{
+height:40px;
+border:none;
+border-radius:10px;
+background:#303030;
+color:white;
+padding:0 12px;
+display:flex;
+align-items:center;
+gap:8px;
+cursor:pointer;
 }
 
-.description {
-    font-size: 17px;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    outline: none;
+.startMenu{
+position:absolute;
+left:8px;
+bottom:60px;
+width:260px;
+background:#2c2c2c;
+border-radius:14px;
+overflow:hidden;
+box-shadow:0 10px 40px rgba(0,0,0,0.45);
 }
 
-.gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
-    gap: 14px;
-    margin-top: 24px;
+.startItem{
+width:100%;
+height:48px;
+border:none;
+background:transparent;
+color:white;
+display:flex;
+align-items:center;
+gap:10px;
+padding:0 16px;
+cursor:pointer;
 }
 
-.gallery-item {
-    position: relative;
+.startItem:hover{
+background:rgba(255,255,255,0.08);
 }
 
-.gallery-item img {
-    width: 100%;
-    border-radius: 18px;
-    max-height: 260px;
-    object-fit: cover;
-    user-select: none;
+.popup{
+position:absolute;
+width:420px;
+background:white;
+border-radius:14px;
+overflow:hidden;
+border:1px solid #ccc;
+box-shadow:0 10px 40px rgba(0,0,0,0.45);
+z-index:999999;
 }
 
-.delete-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    cursor: pointer;
+.popupBar{
+height:42px;
+background:#f3f3f3;
+border-bottom:1px solid #ddd;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 10px;
+cursor:move;
 }
 
-.link-list,
-.file-list {
-    margin-top: 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+.popupContent{
+padding:16px;
 }
 
-.link-item,
-.file-item {
-    background: #f5f5f5;
-    border-radius: 18px;
-    padding: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.site{
+width:100%;
+min-height:100%;
+background:white;
 }
 
-.link-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.topbar{
+height:60px;
+background:white;
+border-bottom:1px solid #ddd;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 16px;
+position:sticky;
+top:0;
+z-index:10;
 }
 
-.link-item {
-    text-decoration: none;
-    color: black;
+.header{
+height:260px;
+background:linear-gradient(135deg,#0078d4,#00a2ff);
+position:relative;
 }
 
-.dropzone {
-    border: 2px dashed #0078d4;
-    border-radius: 18px;
-    padding: 24px;
-    text-align: center;
-    color: #0078d4;
+.headerOverlay{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,0.35);
+display:flex;
+align-items:end;
+padding:32px;
 }
 
-.publish-url {
-    background: #0078d4;
-    color: white;
-    border-radius: 14px;
-    padding: 14px;
-    margin-top: 14px;
-    word-break: break-all;
-    font-size: 14px;
+.headerTitleInput{
+font-size:52px;
+font-weight:bold;
+background:transparent;
+border:none;
+outline:none;
+color:white;
+width:100%;
 }
 
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999999;
-    padding: 14px;
+.editor{
+padding:40px;
+min-height:700px;
+background:white;
 }
 
-.modal {
-    width: 430px;
-    max-width: 100%;
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+.editor textarea{
+width:100%;
+min-height:500px;
+border:none;
+outline:none;
+font-size:20px;
+line-height:1.8;
+resize:none;
+font-family:"Segoe UI";
 }
 
-.mobile-edit-btn {
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    z-index: 99999;
+.preview{
+margin-top:24px;
+padding-top:24px;
+border-top:1px solid #ddd;
 }
 
-@media (max-width: 1000px) {
+.preview img{
+max-width:100%;
+border-radius:10px;
+margin-top:14px;
+display:block;
+}
 
-    .layout {
-        flex-direction: column;
-    }
+.preview video{
+max-width:100%;
+border-radius:10px;
+margin-top:14px;
+display:block;
+}
 
-    .sidebar {
-        width: 100%;
-    }
+.downloadBtn{
+display:inline-block;
+padding:12px 16px;
+border-radius:10px;
+background:#0078d4;
+color:white;
+text-decoration:none;
+margin-top:12px;
+}
 
-    .header {
-        height: 220px;
-    }
+.tabs{
+position:absolute;
+left:0;
+right:0;
+top:0;
+height:48px;
+background:#202020;
+display:flex;
+align-items:center;
+gap:6px;
+padding:0 8px;
+z-index:99999;
+}
 
-    .header-title {
-        font-size: 34px;
-    }
+.tab{
+height:34px;
+border:none;
+border-radius:10px;
+background:#303030;
+color:white;
+padding:0 14px;
+display:flex;
+align-items:center;
+gap:8px;
+cursor:pointer;
+}
 
-    .content {
-        padding: 20px;
-    }
+.tab.active{
+background:#0078d4;
+}
 
-    .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
-    }
+.tabView{
+position:absolute;
+left:0;
+right:0;
+top:48px;
+bottom:0;
+}
 
+iframe{
+width:100%;
+height:100%;
+border:none;
 }
 
 </style>
@@ -280,852 +338,1117 @@ html, body {
 <script type="text/babel">
 
 const {
-    PrimaryButton,
-    DefaultButton,
-    TextField,
-    Toggle,
-    Icon
+PrimaryButton,
+TextField,
+Checkbox,
+Stack,
+Icon
 } = FluentUIReact;
 
-const ABLY_API_KEY =
-"JW3Hvw.fw1o0A:-zV3VatQkBUx-hVmtwFGE6Bwbv_wG4kIoz7LHOKNawY";
+const ably =
+new Ably.Realtime(
+"JW3Hvw.fw1o0A:-zV3VatQkBUx-hVmtwFGE6Bwbv_wG4kIoz7LHOKNawY"
+);
 
-const ably = new Ably.Realtime(ABLY_API_KEY);
+const channel =
+ably.channels.get("homepage-builder");
 
-function randomCode(length = 32) {
+function App(){
 
-    const chars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const [windows,setWindows] =
+React.useState([
+createBuilder(1)
+]);
 
-    let result = "";
+const [startOpen,setStartOpen] =
+React.useState(false);
 
-    crypto.getRandomValues(new Uint32Array(length))
-    .forEach(v => {
-        result += chars[v % chars.length];
-    });
+const [popup,setPopup] =
+React.useState(null);
 
-    return result;
+const [tabMode,setTabMode] =
+React.useState(false);
+
+const [activeTab,setActiveTab] =
+React.useState(0);
+
+function createBuilder(id){
+
+return{
+id,
+type:"builder",
+title:`Homepage Builder (${id})`,
+x:100,
+y:80,
+width:1000,
+height:700,
+minimized:false,
+maximized:false,
+z:id
+};
 
 }
 
-function App() {
-
-    const params =
-    new URLSearchParams(location.search);
-
-    const code =
-    params.get("code");
-
-    const viewMode =
-    !!code;
-
-    const [title, setTitle] =
-    React.useState("My Homepage");
-
-    const [description, setDescription] =
-    React.useState("ここを直接クリックして編集");
-
-    const [headerImage, setHeaderImage] =
-    React.useState("");
-
-    const [headerColor, setHeaderColor] =
-    React.useState("#0078d4");
-
-    const [images, setImages] =
-    React.useState([]);
-
-    const [links, setLinks] =
-    React.useState([]);
-
-    const [files, setFiles] =
-    React.useState([]);
-
-    const [viewPassword, setViewPassword] =
-    React.useState("");
-
-    const [editPassword, setEditPassword] =
-    React.useState("");
-
-    const [requirePassword, setRequirePassword] =
-    React.useState(false);
-
-    const [locked, setLocked] =
-    React.useState(false);
-
-    const [passwordInput, setPasswordInput] =
-    React.useState("");
-
-    const [editUnlocked, setEditUnlocked] =
-    React.useState(!viewMode);
-
-    const [showEditLogin, setShowEditLogin] =
-    React.useState(false);
-
-    React.useEffect(() => {
-
-        if (viewMode) {
-            loadPage(code);
-        }
-
-    }, []);
-
-    React.useEffect(() => {
-
-        const keyHandler = (e) => {
-
-            if (e.key.toLowerCase() === "e") {
-                setShowEditLogin(true);
-            }
-
-        };
-
-        window.addEventListener("keydown", keyHandler);
-
-        return () => {
-            window.removeEventListener("keydown", keyHandler);
-        };
-
-    }, []);
-
-    async function loadPage(code) {
-
-        try {
-
-            const channel =
-            ably.channels.get("homepage_" + code);
-
-            const result =
-            await channel.history({ limit: 1 });
-
-            if (!result.items.length) {
-                alert("ページが見つかりません");
-                return;
-            }
-
-            const data =
-            result.items[0].data;
-
-            setTitle(data.title || "");
-            setDescription(data.description || "");
-            setHeaderImage(data.headerImage || "");
-            setHeaderColor(data.headerColor || "#0078d4");
-            setImages(data.images || []);
-            setLinks(data.links || []);
-            setFiles(data.files || []);
-            setViewPassword(data.viewPassword || "");
-            setEditPassword(data.editPassword || "");
-            setRequirePassword(data.requirePassword || false);
-
-            if (data.requirePassword) {
-                setLocked(true);
-            }
-
-        } catch (e) {
-
-            console.error(e);
-
-            alert("読み込みエラー");
-
-        }
-
-    }
-
-    async function publishPage() {
-
-        try {
-
-            const finalCode =
-            code || randomCode();
-
-            const data = {
-                title,
-                description,
-                headerImage,
-                headerColor,
-                images,
-                links,
-                files,
-                viewPassword,
-                editPassword,
-                requirePassword,
-                updatedAt: Date.now()
-            };
-
-            const channel =
-            ably.channels.get("homepage_" + finalCode);
-
-            await channel.publish(
-                "homepage",
-                data
-            );
-
-            const url =
-            "https://ayatocraft.github.io/homepagebuilder/index.html?code=" +
-            finalCode;
-
-            if (location.protocol !== "file:") {
-
-                history.replaceState(
-                    {},
-                    "",
-                    "?code=" + finalCode
-                );
-
-            }
-
-            alert(
-                "公開完了\n\n" + url
-            );
-
-        } catch (e) {
-
-            console.error(e);
-
-            alert("公開失敗");
-
-        }
-
-    }
-
-    function uploadHeader(e) {
-
-        const file =
-        e.target.files[0];
-
-        if (!file) return;
-
-        const url =
-        URL.createObjectURL(file);
-
-        setHeaderImage(url);
-
-    }
-
-    function uploadImage(e) {
-
-        const file =
-        e.target.files[0];
-
-        if (!file) return;
-
-        const url =
-        URL.createObjectURL(file);
-
-        setImages(prev => [
-            ...prev,
-            url
-        ]);
-
-    }
-
-    function uploadFile(e) {
-
-        const file =
-        e.target.files[0];
-
-        if (!file) return;
-
-        const reader =
-        new FileReader();
-
-        reader.onload = () => {
-
-            setFiles(prev => [
-                ...prev,
-                {
-                    name: file.name,
-                    data: reader.result
-                }
-            ]);
-
-        };
-
-        reader.readAsDataURL(file);
-
-    }
-
-    function addLink() {
-
-        const title =
-        prompt("リンク名");
-
-        if (!title) return;
-
-        const url =
-        prompt("URL");
-
-        if (!url) return;
-
-        setLinks(prev => [
-            ...prev,
-            {
-                title,
-                url
-            }
-        ]);
-
-    }
-
-    function removeImage(index) {
-
-        setImages(prev =>
-            prev.filter((_,i)=>i !== index)
-        );
-
-    }
-
-    function moveImage(from, to) {
-
-        const arr = [...images];
-
-        const item = arr[from];
-
-        arr.splice(from, 1);
-
-        arr.splice(to, 0, item);
-
-        setImages(arr);
-
-    }
-
-    function unlockView() {
-
-        if (passwordInput === viewPassword) {
-            setLocked(false);
-        } else {
-            alert("パスワードが違います");
-        }
-
-    }
-
-    function unlockEditor(codeInput) {
-
-        if (codeInput === editPassword) {
-
-            setEditUnlocked(true);
-
-            setShowEditLogin(false);
-
-        } else {
-
-            alert("編集パスコードが違います");
-
-        }
-
-    }
-
-    if (locked) {
-
-        return (
-
-            <div className="overlay">
-
-                <div className="modal">
-
-                    <h2>
-                        🔒 保護されたページ
-                    </h2>
-
-                    <p>
-                        閲覧パスワードを入力
-                    </p>
-
-                    <TextField
-                        type="password"
-                        value={passwordInput}
-                        onChange={(e,v)=>
-                            setPasswordInput(v)
-                        }
-                    />
-
-                    <div style={{height:16}} />
-
-                    <PrimaryButton
-                        text="表示"
-                        onClick={unlockView}
-                    />
-
-                </div>
-
-            </div>
-
-        );
-
-    }
-
-    return (
-
-        <div>
-
-            <div className="topbar">
-
-                <div className="brand">
-
-                    <Icon iconName="Globe" />
-
-                    Homepage Builder
-
-                </div>
-
-                {
-                    !viewMode &&
-                    <PrimaryButton
-                        text="公開"
-                        iconProps={{
-                            iconName: "Upload"
-                        }}
-                        onClick={publishPage}
-                    />
-                }
-
-                {
-                    viewMode &&
-                    editUnlocked &&
-                    <PrimaryButton
-                        text="保存"
-                        iconProps={{
-                            iconName: "Save"
-                        }}
-                        onClick={publishPage}
-                    />
-                }
-
-            </div>
-
-            <div className="layout">
-
-                {
-                    editUnlocked &&
-                    <div className="sidebar">
-
-                        <div className="card">
-
-                            <h2>
-                                <Icon iconName="Photo2" />
-                                ヘッダー
-                            </h2>
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={uploadHeader}
-                            />
-
-                            <div style={{height:14}} />
-
-                            <TextField
-                                label="ヘッダー色"
-                                value={headerColor}
-                                onChange={(e,v)=>
-                                    setHeaderColor(v)
-                                }
-                            />
-
-                        </div>
-
-                        <div className="card">
-
-                            <h2>
-                                <Icon iconName="Picture" />
-                                画像
-                            </h2>
-
-                            <div className="dropzone">
-
-                                画像追加
-
-                                <div style={{height:12}} />
-
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={uploadImage}
-                                />
-
-                            </div>
-
-                        </div>
-
-                        <div className="card">
-
-                            <h2>
-                                <Icon iconName="Link" />
-                                URLリンク
-                            </h2>
-
-                            <PrimaryButton
-                                text="リンク追加"
-                                iconProps={{
-                                    iconName: "Add"
-                                }}
-                                onClick={addLink}
-                            />
-
-                        </div>
-
-                        <div className="card">
-
-                            <h2>
-                                <Icon iconName="FabricFolder" />
-                                ファイル配布
-                            </h2>
-
-                            <input
-                                type="file"
-                                onChange={uploadFile}
-                            />
-
-                        </div>
-
-                        <div className="card">
-
-                            <h2>
-                                <Icon iconName="Lock" />
-                                公開設定
-                            </h2>
-
-                            <Toggle
-                                label="閲覧パスワード"
-                                checked={requirePassword}
-                                onChange={(e,v)=>
-                                    setRequirePassword(v)
-                                }
-                            />
-
-                            {
-                                requirePassword &&
-                                <>
-                                    <div style={{height:12}} />
-
-                                    <TextField
-                                        label="閲覧パスワード"
-                                        type="password"
-                                        value={viewPassword}
-                                        onChange={(e,v)=>
-                                            setViewPassword(v)
-                                        }
-                                    />
-                                </>
-                            }
-
-                            <div style={{height:12}} />
-
-                            <TextField
-                                label="編集パスコード"
-                                type="password"
-                                value={editPassword}
-                                onChange={(e,v)=>
-                                    setEditPassword(v)
-                                }
-                            />
-
-                            {
-                                code &&
-                                <div className="publish-url">
-
-                                    https://ayatocraft.github.io/homepagebuilder/index.html?code={code}
-
-                                </div>
-                            }
-
-                        </div>
-
-                    </div>
-                }
-
-                <div className="preview-area">
-
-                    <div className="site">
-
-                        <div
-                            className="header"
-                            style={{
-                                background:
-                                headerImage
-                                ?
-                                `url(${headerImage}) center/cover`
-                                :
-                                headerColor
-                            }}
-                        >
-
-                            <div className="header-overlay">
-
-                                <div
-                                    className="header-title"
-                                    contentEditable={editUnlocked}
-                                    suppressContentEditableWarning
-                                    onInput={(e)=>
-                                        setTitle(
-                                            e.target.innerText
-                                        )
-                                    }
-                                >
-                                    {title}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div className="content">
-
-                            <div
-                                className="description"
-                                contentEditable={editUnlocked}
-                                suppressContentEditableWarning
-                                onInput={(e)=>
-                                    setDescription(
-                                        e.target.innerText
-                                    )
-                                }
-                            >
-                                {description}
-                            </div>
-
-                            <div className="gallery">
-
-                                {
-                                    images.map((img,index)=>(
-
-                                        <div
-                                            key={index}
-                                            className="gallery-item"
-                                            draggable={editUnlocked}
-                                            onDragStart={(e)=>{
-
-                                                e.dataTransfer.setData(
-                                                    "index",
-                                                    index
-                                                );
-
-                                            }}
-                                            onDragOver={(e)=>{
-
-                                                e.preventDefault();
-
-                                            }}
-                                            onDrop={(e)=>{
-
-                                                const from =
-                                                Number(
-                                                    e.dataTransfer.getData(
-                                                        "index"
-                                                    )
-                                                );
-
-                                                moveImage(
-                                                    from,
-                                                    index
-                                                );
-
-                                            }}
-                                        >
-
-                                            <img src={img} />
-
-                                            {
-                                                editUnlocked &&
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={()=>
-                                                        removeImage(index)
-                                                    }
-                                                >
-                                                    <Icon iconName="Delete" />
-                                                </button>
-                                            }
-
-                                        </div>
-
-                                    ))
-                                }
-
-                            </div>
-
-                            {
-                                links.length > 0 &&
-                                <div className="link-list">
-
-                                    {
-                                        links.map((link,index)=>(
-
-                                            <a
-                                                key={index}
-                                                href={link.url}
-                                                target="_blank"
-                                                className="link-item"
-                                            >
-
-                                                <div className="link-left">
-
-                                                    <Icon iconName="Link" />
-
-                                                    {link.title}
-
-                                                </div>
-
-                                                <Icon iconName="NavigateExternalInline" />
-
-                                            </a>
-
-                                        ))
-                                    }
-
-                                </div>
-                            }
-
-                            {
-                                files.length > 0 &&
-                                <div className="file-list">
-
-                                    {
-                                        files.map((file,index)=>(
-
-                                            <div
-                                                key={index}
-                                                className="file-item"
-                                            >
-
-                                                <div className="link-left">
-
-                                                    <Icon iconName="Page" />
-
-                                                    {file.name}
-
-                                                </div>
-
-                                                <a
-                                                    href={file.data}
-                                                    download={file.name}
-                                                >
-
-                                                    <PrimaryButton
-                                                        text="DL"
-                                                        iconProps={{
-                                                            iconName: "Download"
-                                                        }}
-                                                    />
-
-                                                </a>
-
-                                            </div>
-
-                                        ))
-                                    }
-
-                                </div>
-                            }
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {
-                viewMode &&
-                !editUnlocked &&
-                <div className="mobile-edit-btn">
-
-                    <PrimaryButton
-                        text="編集"
-                        iconProps={{
-                            iconName: "Edit"
-                        }}
-                        onClick={()=>
-                            setShowEditLogin(true)
-                        }
-                    />
-
-                </div>
-            }
-
-            {
-                showEditLogin &&
-                <EditLoginModal
-                    onClose={()=>
-                        setShowEditLogin(false)
-                    }
-                    onUnlock={unlockEditor}
-                />
-            }
-
-        </div>
-
-    );
+function createMemo(){
+
+return{
+id:Date.now(),
+type:"memo",
+title:"Memo",
+x:140,
+y:100,
+width:900,
+height:600,
+z:999
+};
 
 }
 
-function EditLoginModal({
+function updateWindow(id,data){
 
-    onClose,
-    onUnlock
+setWindows(prev=>
+prev.map(w=>
+w.id===id
+?
+{...w,...data}
+:
+w
+)
+);
 
-}) {
+}
 
-    const [code, setCode] =
-    React.useState("");
+function focusWindow(id){
 
-    return (
+const top =
+Math.max(...windows.map(w=>w.z))+1;
 
-        <div className="overlay">
+updateWindow(id,{
+z:top
+});
 
-            <div className="modal">
+}
 
-                <h2>
-                    ✏️ 編集ログイン
-                </h2>
+function closeWindow(id){
 
-                <p>
-                    編集パスコードを入力
-                </p>
+setWindows(prev=>
+prev.filter(w=>w.id!==id)
+);
 
-                <TextField
-                    type="password"
-                    value={code}
-                    onChange={(e,v)=>
-                        setCode(v)
-                    }
-                />
+}
 
-                <div style={{
-                    marginTop: 20,
-                    display: "flex",
-                    justifyContent: "end",
-                    gap: 10
-                }}>
+if(tabMode){
 
-                    <DefaultButton
-                        text="閉じる"
-                        onClick={onClose}
-                    />
+return(
 
-                    <PrimaryButton
-                        text="ログイン"
-                        iconProps={{
-                            iconName: "Unlock"
-                        }}
-                        onClick={()=>
-                            onUnlock(code)
-                        }
-                    />
+<div
+style={{
+width:"100%",
+height:"100%",
+background:"#fff"
+}}
+>
 
-                </div>
+<div className="tabs">
 
-            </div>
+{
 
-        </div>
+windows.map((w,i)=>(
 
-    );
+<div
+key={w.id}
+style={{
+display:"flex",
+gap:"4px"
+}}
+>
+
+<button
+className={
+"tab " +
+(
+activeTab===i
+?
+"active"
+:
+""
+)
+}
+onClick={()=>
+setActiveTab(i)
+}
+>
+<Icon
+iconName={
+w.type==="memo"
+?
+"Edit"
+:
+"Globe"
+}
+/>
+{w.title}
+</button>
+
+<button
+className="tab"
+onClick={()=>{
+closeWindow(w.id);
+}}
+>
+✕
+</button>
+
+</div>
+
+))
+
+}
+
+<button
+className="tab"
+onClick={()=>{
+setWindows(prev=>[
+...prev,
+createBuilder(prev.length+1)
+]);
+}}
+>
+＋
+</button>
+
+<button
+className="tab"
+onClick={()=>
+setTabMode(false)
+}
+>
+🗗
+</button>
+
+</div>
+
+<div className="tabView">
+
+{
+
+windows[activeTab] &&
+
+<WindowView
+data={windows[activeTab]}
+updateWindow={updateWindow}
+focusWindow={focusWindow}
+closeWindow={closeWindow}
+setPopup={setPopup}
+tabMode={true}
+/>
+
+}
+
+</div>
+
+</div>
+
+);
+
+}
+
+return(
+
+<div className="desktop">
+
+{
+
+windows
+.sort((a,b)=>a.z-b.z)
+.map(win=>(
+
+!win.minimized &&
+
+<WindowView
+key={win.id}
+data={win}
+updateWindow={updateWindow}
+focusWindow={focusWindow}
+closeWindow={closeWindow}
+setPopup={setPopup}
+/>
+
+))
+
+}
+
+{
+
+popup &&
+
+<Popup
+popup={popup}
+close={()=>
+setPopup(null)
+}
+/>
+
+}
+
+<div className="taskbar">
+
+<button
+className="startBtn"
+onClick={()=>
+setStartOpen(!startOpen)
+}
+>
+<Icon iconName="Globe"/>
+</button>
+
+{
+
+startOpen &&
+
+<div className="startMenu">
+
+<button
+className="startItem"
+onClick={()=>{
+setWindows(prev=>[
+...prev,
+createBuilder(prev.length+1)
+]);
+}}
+>
+<Icon iconName="Globe"/>
+Homepage Builder
+</button>
+
+<button
+className="startItem"
+onClick={()=>{
+setWindows(prev=>[
+...prev,
+createMemo()
+]);
+}}
+>
+<Icon iconName="Edit"/>
+Memo
+</button>
+
+<button
+className="startItem"
+onClick={()=>
+setTabMode(true)
+}
+>
+<Icon iconName="BrowsePhotos"/>
+タブモード
+</button>
+
+</div>
+
+}
+
+{
+
+windows.map(win=>(
+
+<button
+key={win.id}
+className="taskBtn"
+onClick={()=>{
+updateWindow(
+win.id,
+{
+minimized:
+!win.minimized
+}
+);
+}}
+>
+
+<Icon
+iconName={
+win.type==="memo"
+?
+"Edit"
+:
+"Globe"
+}
+/>
+
+{win.title}
+
+</button>
+
+))
+
+}
+
+</div>
+
+</div>
+
+);
+
+}
+
+function Popup({
+popup,
+close
+}){
+
+const [pos,setPos] =
+React.useState({
+x:popup.x,
+y:popup.y
+});
+
+function drag(e){
+
+const sx=e.clientX;
+const sy=e.clientY;
+
+const ox=pos.x;
+const oy=pos.y;
+
+function move(ev){
+
+setPos({
+x:ox+(ev.clientX-sx),
+y:oy+(ev.clientY-sy)
+});
+
+}
+
+function up(){
+
+removeEventListener("mousemove",move);
+removeEventListener("mouseup",up);
+
+}
+
+addEventListener("mousemove",move);
+addEventListener("mouseup",up);
+
+}
+
+return(
+
+<div
+className="popup"
+style={{
+left:pos.x,
+top:pos.y
+}}
+>
+
+<div
+className="popupBar"
+onMouseDown={drag}
+>
+
+<div>{popup.title}</div>
+
+<button
+className="windowBtn"
+onClick={close}
+>
+✕
+</button>
+
+</div>
+
+<div className="popupContent">
+
+{popup.content}
+
+</div>
+
+</div>
+
+);
+
+}
+
+function WindowView({
+data,
+updateWindow,
+focusWindow,
+closeWindow,
+setPopup,
+tabMode
+}){
+
+function drag(e){
+
+if(tabMode)return;
+
+const sx=e.clientX;
+const sy=e.clientY;
+
+const ox=data.x;
+const oy=data.y;
+
+function move(ev){
+
+updateWindow(
+data.id,
+{
+x:ox+(ev.clientX-sx),
+y:oy+(ev.clientY-sy)
+}
+);
+
+}
+
+function up(){
+
+removeEventListener("mousemove",move);
+removeEventListener("mouseup",up);
+
+}
+
+addEventListener("mousemove",move);
+addEventListener("mouseup",up);
+
+}
+
+function resize(e){
+
+e.stopPropagation();
+
+if(tabMode)return;
+
+const sx=e.clientX;
+const sy=e.clientY;
+
+const ow=data.width;
+const oh=data.height;
+
+function move(ev){
+
+updateWindow(
+data.id,
+{
+width:Math.max(
+450,
+ow+(ev.clientX-sx)
+),
+height:Math.max(
+300,
+oh+(ev.clientY-sy)
+)
+}
+);
+
+}
+
+function up(){
+
+removeEventListener("mousemove",move);
+removeEventListener("mouseup",up);
+
+}
+
+addEventListener("mousemove",move);
+addEventListener("mouseup",up);
+
+}
+
+const style =
+tabMode
+?
+{
+left:0,
+top:0,
+width:"100%",
+height:"100%"
+}
+:
+data.maximized
+?
+{
+left:0,
+top:0,
+width:"100%",
+height:"calc(100% - 52px)",
+zIndex:data.z
+}
+:
+{
+left:data.x,
+top:data.y,
+width:data.width,
+height:data.height,
+zIndex:data.z
+};
+
+return(
+
+<div
+className="window"
+style={style}
+onMouseDown={()=>
+focusWindow(data.id)
+}
+>
+
+<div
+className="windowBar"
+onMouseDown={drag}
+>
+
+<div className="windowTitle">
+
+<Icon
+iconName={
+data.type==="memo"
+?
+"Edit"
+:
+"Globe"
+}
+/>
+
+{data.title}
+
+</div>
+
+{
+
+!tabMode &&
+
+<div className="windowBtns">
+
+<button
+className="windowBtn"
+onClick={()=>{
+updateWindow(
+data.id,
+{
+minimized:true
+}
+);
+}}
+>
+─
+</button>
+
+<button
+className="windowBtn"
+onClick={()=>{
+updateWindow(
+data.id,
+{
+maximized:
+!data.maximized
+}
+);
+}}
+>
+□
+</button>
+
+<button
+className="windowBtn"
+onClick={()=>
+closeWindow(data.id)
+}
+>
+✕
+</button>
+
+</div>
+
+}
+
+</div>
+
+<div className="windowContent">
+
+{
+
+data.type==="memo"
+
+?
+
+<iframe
+src="https://ayatocraft.github.io/memo"
+></iframe>
+
+:
+
+<HomepageBuilder
+windowData={data}
+updateWindow={updateWindow}
+setPopup={setPopup}
+/>
+
+}
+
+</div>
+
+{
+
+!tabMode
+&&
+!data.maximized
+&&
+
+<div
+className="resize"
+onMouseDown={resize}
+></div>
+
+}
+
+</div>
+
+);
+
+}
+
+function HomepageBuilder({
+windowData,
+updateWindow,
+setPopup
+}){
+
+const [title,setTitle] =
+React.useState("My Homepage");
+
+const [text,setText] =
+React.useState("");
+
+const [items,setItems] =
+React.useState([]);
+
+React.useEffect(()=>{
+
+updateWindow(
+windowData.id,
+{
+title
+}
+);
+
+},[title]);
+
+function addURL(){
+
+const url =
+prompt("URL");
+
+if(!url)return;
+
+const label =
+prompt("表示テキスト");
+
+setItems(prev=>[
+...prev,
+{
+type:"link",
+url,
+label:label || url
+}
+]);
+
+}
+
+function uploadFile(file){
+
+const url =
+URL.createObjectURL(file);
+
+if(
+file.type.startsWith("image/")
+){
+
+setItems(prev=>[
+...prev,
+{
+type:"image",
+url
+}
+]);
+
+}
+
+else if(
+file.type.startsWith("video/")
+){
+
+setItems(prev=>[
+...prev,
+{
+type:"video",
+url
+}
+]);
+
+}
+
+else{
+
+setItems(prev=>[
+...prev,
+{
+type:"file",
+url,
+name:file.name
+}
+]);
+
+}
+
+}
+
+function publish(){
+
+setPopup({
+
+title:"公開",
+x:300,
+y:100,
+
+content:
+<PublishPopup />
+
+});
+
+}
+
+return(
+
+<div className="site">
+
+<div className="topbar">
+
+<div>
+Homepage Builder
+</div>
+
+<div
+style={{
+display:"flex",
+gap:"10px"
+}}
+>
+
+<PrimaryButton
+text="ファイル"
+onClick={()=>{
+
+setPopup({
+
+title:"ファイル追加",
+x:300,
+y:120,
+
+content:
+<FilePopup
+uploadFile={
+uploadFile
+}
+/>
+
+});
+
+}}
+/>
+
+<PrimaryButton
+text="URL"
+onClick={addURL}
+/>
+
+<PrimaryButton
+text="公開"
+onClick={publish}
+/>
+
+</div>
+
+</div>
+
+<div className="header">
+
+<div className="headerOverlay">
+
+<input
+className="headerTitleInput"
+value={title}
+onChange={(e)=>
+setTitle(e.target.value)
+}
+placeholder="タイトル"
+/>
+
+</div>
+
+</div>
+
+<div className="editor">
+
+<textarea
+value={text}
+onChange={(e)=>
+setText(e.target.value)
+}
+placeholder="ここに入力"
+></textarea>
+
+<div className="preview">
+
+<div
+style={{
+whiteSpace:"pre-wrap",
+fontSize:"20px",
+lineHeight:"1.8"
+}}
+>
+{text}
+</div>
+
+{
+
+items.map((item,i)=>{
+
+if(item.type==="image"){
+
+return(
+<img
+key={i}
+src={item.url}
+/>
+);
+
+}
+
+if(item.type==="video"){
+
+return(
+<video
+key={i}
+src={item.url}
+controls
+></video>
+);
+
+}
+
+if(item.type==="link"){
+
+return(
+<div
+key={i}
+style={{
+marginTop:"14px"
+}}
+>
+<a
+href={item.url}
+target="_blank"
+style={{
+color:"#0078d4",
+fontSize:"18px"
+}}
+>
+{item.label}
+</a>
+</div>
+);
+
+}
+
+if(item.type==="file"){
+
+return(
+<div key={i}>
+<a
+href={item.url}
+download={item.name}
+className="downloadBtn"
+>
+{item.name}
+</a>
+</div>
+);
+
+}
+
+})
+
+}
+
+</div>
+
+</div>
+
+</div>
+
+);
+
+}
+
+function FilePopup({
+uploadFile
+}){
+
+const [file,setFile] =
+React.useState(null);
+
+return(
+
+<Stack
+tokens={{
+childrenGap:10
+}}
+>
+
+<input
+type="file"
+onChange={(e)=>{
+setFile(
+e.target.files[0]
+);
+}}
+/>
+
+<PrimaryButton
+text="アップロード"
+onClick={()=>{
+if(file){
+uploadFile(file);
+}
+}}
+/>
+
+</Stack>
+
+);
+
+}
+
+function PublishPopup(){
+
+const [viewPassEnabled,
+setViewPassEnabled] =
+React.useState(false);
+
+const [editPassEnabled,
+setEditPassEnabled] =
+React.useState(false);
+
+const [viewPass,
+setViewPass] =
+React.useState("");
+
+const [editPass,
+setEditPass] =
+React.useState("");
+
+const [url,setUrl] =
+React.useState("");
+
+function publish(){
+
+const code =
+Math.random()
+.toString(36)
+.substring(2)
++
+Math.random()
+.toString(36)
+.substring(2);
+
+setUrl(
+location.origin +
+location.pathname +
+"?code=" +
+code
+);
+
+}
+
+return(
+
+<Stack
+tokens={{
+childrenGap:12
+}}
+>
+
+<Checkbox
+label="閲覧パスワードON"
+checked={viewPassEnabled}
+onChange={(e,v)=>
+setViewPassEnabled(v)
+}
+/>
+
+{
+
+viewPassEnabled &&
+
+<TextField
+label="閲覧パスワード"
+value={viewPass}
+onChange={(e,v)=>
+setViewPass(v || "")
+}
+/>
+
+}
+
+<Checkbox
+label="編集パスワードON"
+checked={editPassEnabled}
+onChange={(e,v)=>
+setEditPassEnabled(v)
+}
+/>
+
+{
+
+editPassEnabled &&
+
+<TextField
+label="編集パスワード"
+value={editPass}
+onChange={(e,v)=>
+setEditPass(v || "")
+}
+/>
+
+}
+
+<PrimaryButton
+text="公開"
+onClick={publish}
+/>
+
+{
+
+url &&
+
+<TextField
+label="公開URL"
+value={url}
+readOnly
+/>
+
+}
+
+</Stack>
+
+);
 
 }
 
 ReactDOM.createRoot(
-    document.getElementById("root")
-).render(<App />);
+document.getElementById("root")
+).render(<App/>);
 
 </script>
 
