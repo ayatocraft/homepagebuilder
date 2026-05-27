@@ -3,31 +3,31 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Homepage Builder Stable</title>
+<title>Homepage Builder Stable Mobile</title>
 
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
 <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
 <style>
 body{
 margin:0;
-font-family:"Segoe UI";
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI";
 background:#f5f5f5;
 }
 
 .header{
-height:160px;
+height:140px;
 background:linear-gradient(135deg,#0078d4,#00a2ff);
 color:white;
 display:flex;
 align-items:flex-end;
-padding:20px;
+padding:16px;
 }
 
 .header input{
-font-size:40px;
+font-size:28px;
 font-weight:bold;
 border:none;
 background:transparent;
@@ -37,36 +37,35 @@ width:100%;
 }
 
 .page{
-max-width:900px;
+max-width:800px;
 margin:0 auto;
-padding:20px;
+padding:16px;
 background:white;
 min-height:100vh;
 }
 
 .toolbar{
 display:flex;
-gap:10px;
-margin-bottom:10px;
+gap:8px;
 flex-wrap:wrap;
+margin-bottom:10px;
 }
 
 button{
-padding:8px 12px;
+padding:8px 10px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 background:#0078d4;
 color:white;
-cursor:pointer;
+font-size:14px;
 }
 
 .input{
 width:100%;
-padding:8px;
+padding:10px;
 font-size:16px;
 border:1px solid #ddd;
-border-radius:6px;
-outline:none;
+border-radius:8px;
 margin-bottom:8px;
 }
 
@@ -81,10 +80,21 @@ color:#0078d4;
 word-break:break-all;
 }
 
-.urlBox{
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.4);
 display:flex;
-gap:10px;
-margin-top:10px;
+align-items:center;
+justify-content:center;
+}
+
+.modalBox{
+background:white;
+padding:16px;
+border-radius:12px;
+width:90%;
+max-width:400px;
 }
 </style>
 </head>
@@ -92,7 +102,8 @@ margin-top:10px;
 <body>
 <div id="root"></div>
 
-<script type="text/babel">
+<script>
+const e = React.createElement;
 
 /* =========================
    ABLY
@@ -110,12 +121,12 @@ function getCode(){
 return new URLSearchParams(location.search).get("code");
 }
 
-function saveLocal(code,data){
-localStorage.setItem("page_"+code,JSON.stringify(data));
-}
-
 function loadLocal(code){
 return JSON.parse(localStorage.getItem("page_"+code)||"null");
+}
+
+function saveLocal(code,data){
+localStorage.setItem("page_"+code,JSON.stringify(data));
 }
 
 /* =========================
@@ -133,18 +144,16 @@ const [blocks,setBlocks]=React.useState(saved?.blocks||[
 {type:"text",value:""}
 ]);
 
-const [editing,setEditing]=React.useState(!isView);
-const [publicUrl,setPublicUrl]=React.useState("");
+const [modal,setModal]=React.useState(null);
 
 /* =========================
-   Ably sync (IMPORTANT FIX)
-   → 受信のみでローカル更新
+   LOAD FROM ABLY
 ========================= */
 React.useEffect(()=>{
 
 if(!code) return;
 
-const handler = (msg)=>{
+const handler=(msg)=>{
 if(!msg.data) return;
 
 saveLocal(code,msg.data);
@@ -161,7 +170,7 @@ channel.unsubscribe("sync-"+code,handler);
 },[]);
 
 /* =========================
-   ローカル保存（正本）
+   SAVE LOCAL
 ========================= */
 React.useEffect(()=>{
 if(!code) return;
@@ -169,21 +178,17 @@ saveLocal(code,{title,blocks});
 },[title,blocks]);
 
 /* =========================
-   Eキー切替
+   KEYBOARD (E TOGGLE)
 ========================= */
 React.useEffect(()=>{
 
 function onKey(e){
 
-const el=document.activeElement;
-const typing =
-el &&
-(el.tagName==="INPUT" || el.tagName==="TEXTAREA");
-
-if(typing) return;
+const tag=document.activeElement?.tagName;
+if(tag==="INPUT"||tag==="TEXTAREA")return;
 
 if(e.key.toLowerCase()==="e"){
-setEditing(v=>!v);
+setModal(null);
 }
 }
 
@@ -193,11 +198,11 @@ return ()=>window.removeEventListener("keydown",onKey);
 },[]);
 
 /* =========================
-   BLOCK UPDATE
+   UPDATE
 ========================= */
-function updateBlock(i,value){
+function update(i,val){
 const copy=[...blocks];
-copy[i].value=value;
+copy[i].value=val;
 setBlocks(copy);
 }
 
@@ -209,9 +214,14 @@ setBlocks([...blocks,{type:"text",value:""}]);
 }
 
 function addUrl(){
-const url=prompt("URL");
-if(!url) return;
-setBlocks([...blocks,{type:"url",value:url}]);
+setModal({
+type:"url",
+value:"",
+onSave:(v)=>{
+setBlocks([...blocks,{type:"url",value:v}]);
+setModal(null);
+}
+});
 }
 
 function addImage(){
@@ -220,16 +230,13 @@ input.type="file";
 
 input.onchange=(e)=>{
 const file=e.target.files[0];
-if(!file) return;
+if(!file)return;
 
-const reader=new FileReader();
-reader.onload=()=>{
-setBlocks([...blocks,{
-type:"image",
-value:reader.result
-}]);
+const r=new FileReader();
+r.onload=()=>{
+setBlocks([...blocks,{type:"image",value:r.result}]);
 };
-reader.readAsDataURL(file);
+r.readAsDataURL(file);
 };
 
 input.click();
@@ -242,142 +249,116 @@ function publish(){
 
 const newCode = code || Math.random().toString(36).slice(2);
 
-const data = {title,blocks};
+const data={title,blocks};
 
 saveLocal(newCode,data);
 
-/* Ably broadcast */
+/* Ably notify only */
 channel.publish("sync-"+newCode,data);
 
-const url = location.origin+location.pathname+"?code="+newCode;
-
-setPublicUrl(url);
 location.search="?code="+newCode;
 }
 
 /* =========================
    VIEW MODE
 ========================= */
-if(isView && !editing){
+if(isView){
 
-return(
-<div>
-
-<div className="header">
-<h1>{title}</h1>
-</div>
-
-<div className="page">
-
-{blocks.map((b,i)=>{
+return e("div",null,
+e("div",{className:"header"},
+e("h2",null,title)
+),
+e("div",{className:"page"},
+blocks.map((b,i)=>{
 
 if(b.type==="text"){
-return <div key={i}>{b.value}</div>;
+return e("div",{key:i},b.value);
 }
 
 if(b.type==="url"){
-return (
-<div key={i}>
-<a href={b.value} target="_blank">{b.value}</a>
-</div>
-);
+return e("a",{key:i,href:b.value,target:"_blank"},b.value);
 }
 
 if(b.type==="image"){
-return <img key={i} src={b.value}/>;
+return e("img",{key:i,src:b.value});
 }
 
-})}
-
-</div>
-
-</div>
+})
+)
 );
 }
 
 /* =========================
    EDIT MODE
 ========================= */
-return(
-<div>
+return e("div",null,
 
-<div className="header">
-<input
-value={title}
-onChange={e=>setTitle(e.target.value)}
-/>
-</div>
+e("div",{className:"header"},
+e("input",{
+value:title,
+onChange:e=>setTitle(e.target.value)
+})
+),
 
-<div className="page">
+e("div",{className:"page"},
 
-<div className="toolbar">
+e("div",{className:"toolbar"},
+e("button",{onClick:addText},"テキスト"),
+e("button",{onClick:addUrl},"URL"),
+e("button",{onClick:addImage},"画像"),
+e("button",{onClick:publish},"公開")
+),
 
-<button onClick={addText}>テキスト</button>
-<button onClick={addUrl}>URL</button>
-<button onClick={addImage}>画像</button>
-<button onClick={publish}>公開</button>
-
-</div>
-
-{blocks.map((b,i)=>{
+blocks.map((b,i)=>{
 
 if(b.type==="text"){
-return (
-<input
-key={i}
-className="input"
-value={b.value}
-onChange={e=>updateBlock(i,e.target.value)}
-/>
-);
+return e("input",{
+key:i,
+className:"input",
+value:b.value,
+onChange:e=>update(i,e.target.value)
+});
 }
 
 if(b.type==="url"){
-return (
-<div key={i}>
-<input
-className="input"
-value={b.value}
-onChange={e=>updateBlock(i,e.target.value)}
-/>
-
-{b.value && (
-<a href={b.value} target="_blank">
-{b.value}
-</a>
-)}
-
-</div>
-);
+return e("input",{
+key:i,
+className:"input",
+value:b.value,
+onChange:e=>update(i,e.target.value)
+});
 }
 
 if(b.type==="image"){
-return <img key={i} src={b.value}/>;
+return e("img",{key:i,src:b.value});
 }
 
-})}
+})
 
-{publicUrl && (
-<div className="urlBox">
-<input style={{flex:1}} value={publicUrl} readOnly/>
-<button onClick={()=>{
-navigator.clipboard.writeText(publicUrl);
-alert("コピー");
-}}>
-コピー
-</button>
-</div>
-)}
+),
 
-</div>
+modal && e("div",{className:"modal"},
+e("div",{className:"modalBox"},
 
-</div>
+e("input",{
+className:"input",
+value:modal.value,
+onChange:e=>modal.value=e.target.value
+}),
+
+e("button",{
+onClick:()=>modal.onSave(modal.value)
+},"OK")
+
+)
+)
+
 );
 
 }
 
 ReactDOM.createRoot(document.getElementById("root"))
-.render(<App/>);
+.render(e(App));
 
 </script>
 
