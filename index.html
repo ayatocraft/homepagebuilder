@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Homepage Builder Pro</title>
+<title>Homepage Builder Stable</title>
 
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
 <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
 <style>
@@ -61,14 +60,6 @@ color:white;
 cursor:pointer;
 }
 
-button:hover{
-background:#005a9e;
-}
-
-.block{
-margin-bottom:10px;
-}
-
 .input{
 width:100%;
 padding:8px;
@@ -76,6 +67,7 @@ font-size:16px;
 border:1px solid #ddd;
 border-radius:6px;
 outline:none;
+margin-bottom:8px;
 }
 
 img{
@@ -112,7 +104,7 @@ const ably = new Ably.Realtime(
 const channel = ably.channels.get("homepage-builder");
 
 /* =========================
-   STORAGE
+   UTIL
 ========================= */
 function getCode(){
 return new URLSearchParams(location.search).get("code");
@@ -145,32 +137,31 @@ const [editing,setEditing]=React.useState(!isView);
 const [publicUrl,setPublicUrl]=React.useState("");
 
 /* =========================
-   LOAD FROM ABLY (公開データ取得)
+   Ably sync (IMPORTANT FIX)
+   → 受信のみでローカル更新
 ========================= */
 React.useEffect(()=>{
 
 if(!code) return;
 
-/* リクエスト */
-channel.publish("request-load",{code});
-
-/* レスポンス受信 */
 const handler = (msg)=>{
-
-setTitle(msg.data.title || "My Page");
-setBlocks(msg.data.blocks || []);
+if(!msg.data) return;
 
 saveLocal(code,msg.data);
+setTitle(msg.data.title);
+setBlocks(msg.data.blocks);
 };
 
-channel.subscribe("response-"+code,handler);
+channel.subscribe("sync-"+code,handler);
 
-return ()=>channel.unsubscribe("response-"+code,handler);
+return ()=>{
+channel.unsubscribe("sync-"+code,handler);
+};
 
 },[]);
 
 /* =========================
-   AUTO SAVE LOCAL
+   ローカル保存（正本）
 ========================= */
 React.useEffect(()=>{
 if(!code) return;
@@ -178,7 +169,7 @@ saveLocal(code,{title,blocks});
 },[title,blocks]);
 
 /* =========================
-   E KEY TOGGLE
+   Eキー切替
 ========================= */
 React.useEffect(()=>{
 
@@ -211,7 +202,7 @@ setBlocks(copy);
 }
 
 /* =========================
-   ADD BLOCKS
+   ADD
 ========================= */
 function addText(){
 setBlocks([...blocks,{type:"text",value:""}]);
@@ -245,7 +236,7 @@ input.click();
 }
 
 /* =========================
-   PUBLISH (Ably)
+   PUBLISH
 ========================= */
 function publish(){
 
@@ -253,13 +244,11 @@ const newCode = code || Math.random().toString(36).slice(2);
 
 const data = {title,blocks};
 
-/* local */
 saveLocal(newCode,data);
 
-/* Ably save */
-channel.publish("save-"+newCode,data);
+/* Ably broadcast */
+channel.publish("sync-"+newCode,data);
 
-/* URL */
 const url = location.origin+location.pathname+"?code="+newCode;
 
 setPublicUrl(url);
@@ -339,7 +328,6 @@ key={i}
 className="input"
 value={b.value}
 onChange={e=>updateBlock(i,e.target.value)}
-placeholder="テキスト"
 />
 );
 }
@@ -351,7 +339,6 @@ return (
 className="input"
 value={b.value}
 onChange={e=>updateBlock(i,e.target.value)}
-placeholder="URL"
 />
 
 {b.value && (
@@ -365,9 +352,7 @@ placeholder="URL"
 }
 
 if(b.type==="image"){
-return (
-<img key={i} src={b.value}/>
-);
+return <img key={i} src={b.value}/>;
 }
 
 })}
@@ -377,7 +362,7 @@ return (
 <input style={{flex:1}} value={publicUrl} readOnly/>
 <button onClick={()=>{
 navigator.clipboard.writeText(publicUrl);
-alert("コピーした");
+alert("コピー");
 }}>
 コピー
 </button>
