@@ -1,1451 +1,353 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Homepage Builder Desktop</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Homepage Builder Pro</title>
 
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://unpkg.com/@fluentui/react@8/dist/fluentui-react.min.js"></script>
-<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
 <style>
-
-html,body{
+body{
 margin:0;
-width:100%;
-height:100%;
-overflow:hidden;
-background:#1e1e1e;
 font-family:"Segoe UI";
-}
-
-*{
-box-sizing:border-box;
-}
-
-#root{
-width:100%;
-height:100%;
-}
-
-.desktop{
-width:100%;
-height:100%;
-position:relative;
-overflow:hidden;
-}
-
-.window{
-position:absolute;
-background:white;
-border-radius:14px;
-overflow:hidden;
-display:flex;
-flex-direction:column;
-border:1px solid #cfcfcf;
-box-shadow:0 10px 40px rgba(0,0,0,0.45);
-}
-
-.windowBar{
-height:42px;
-background:#f3f3f3;
-border-bottom:1px solid #ddd;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 10px;
-cursor:move;
-user-select:none;
-}
-
-.windowTitle{
-display:flex;
-align-items:center;
-gap:8px;
-font-size:14px;
-font-weight:600;
-}
-
-.windowBtns{
-display:flex;
-gap:4px;
-}
-
-.windowBtn{
-width:32px;
-height:28px;
-border:none;
-background:transparent;
-border-radius:8px;
-cursor:pointer;
-}
-
-.windowBtn:hover{
-background:#e5e5e5;
-}
-
-.windowContent{
-flex:1;
-overflow:auto;
 background:#f5f5f5;
 }
 
-.resize{
-position:absolute;
-right:0;
-bottom:0;
-width:16px;
-height:16px;
-cursor:nwse-resize;
-}
-
-.taskbar{
-position:absolute;
-left:0;
-right:0;
-bottom:0;
-height:52px;
-background:#202020;
-display:flex;
-align-items:center;
-gap:8px;
-padding:0 8px;
-z-index:99999;
-}
-
-.startBtn{
-width:46px;
-height:40px;
-border:none;
-border-radius:10px;
-background:#0078d4;
-color:white;
-cursor:pointer;
-}
-
-.taskBtn{
-height:40px;
-border:none;
-border-radius:10px;
-background:#303030;
-color:white;
-padding:0 12px;
-display:flex;
-align-items:center;
-gap:8px;
-cursor:pointer;
-}
-
-.startMenu{
-position:absolute;
-left:8px;
-bottom:60px;
-width:260px;
-background:#2c2c2c;
-border-radius:14px;
-overflow:hidden;
-box-shadow:0 10px 40px rgba(0,0,0,0.45);
-}
-
-.startItem{
-width:100%;
-height:48px;
-border:none;
-background:transparent;
-color:white;
-display:flex;
-align-items:center;
-gap:10px;
-padding:0 16px;
-cursor:pointer;
-}
-
-.startItem:hover{
-background:rgba(255,255,255,0.08);
-}
-
-.popup{
-position:absolute;
-width:420px;
-background:white;
-border-radius:14px;
-overflow:hidden;
-border:1px solid #ccc;
-box-shadow:0 10px 40px rgba(0,0,0,0.45);
-z-index:999999;
-}
-
-.popupBar{
-height:42px;
-background:#f3f3f3;
-border-bottom:1px solid #ddd;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 10px;
-cursor:move;
-}
-
-.popupContent{
-padding:16px;
-}
-
-.site{
-width:100%;
-min-height:100%;
-background:white;
-}
-
-.topbar{
-height:60px;
-background:white;
-border-bottom:1px solid #ddd;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 16px;
-position:sticky;
-top:0;
-z-index:10;
-}
-
+/* HEADER */
 .header{
-height:260px;
+height:160px;
 background:linear-gradient(135deg,#0078d4,#00a2ff);
-position:relative;
-}
-
-.headerOverlay{
-position:absolute;
-inset:0;
-background:rgba(0,0,0,0.35);
-display:flex;
-align-items:end;
-padding:32px;
-}
-
-.headerTitleInput{
-font-size:52px;
-font-weight:bold;
-background:transparent;
-border:none;
-outline:none;
 color:white;
-width:100%;
+display:flex;
+align-items:flex-end;
+padding:20px;
 }
 
-.editor{
-padding:40px;
-min-height:700px;
-background:white;
-}
-
-.editor textarea{
-width:100%;
-min-height:500px;
+.header input{
+font-size:40px;
+font-weight:bold;
 border:none;
+background:transparent;
+color:white;
 outline:none;
-font-size:20px;
-line-height:1.8;
-resize:none;
-font-family:"Segoe UI";
+width:100%;
 }
 
-.preview{
-margin-top:24px;
-padding-top:24px;
-border-top:1px solid #ddd;
+/* PAGE */
+.page{
+max-width:900px;
+margin:0 auto;
+padding:20px;
+background:white;
+min-height:100vh;
 }
 
-.preview img{
-max-width:100%;
-border-radius:10px;
-margin-top:14px;
-display:block;
+/* TOOLBAR */
+.toolbar{
+display:flex;
+gap:10px;
+margin-bottom:10px;
 }
 
-.preview video{
-max-width:100%;
-border-radius:10px;
-margin-top:14px;
-display:block;
-}
-
-.downloadBtn{
-display:inline-block;
-padding:12px 16px;
-border-radius:10px;
+button{
+padding:8px 12px;
+border:none;
+border-radius:6px;
 background:#0078d4;
 color:white;
-text-decoration:none;
-margin-top:12px;
-}
-
-.tabs{
-position:absolute;
-left:0;
-right:0;
-top:0;
-height:48px;
-background:#202020;
-display:flex;
-align-items:center;
-gap:6px;
-padding:0 8px;
-z-index:99999;
-}
-
-.tab{
-height:34px;
-border:none;
-border-radius:10px;
-background:#303030;
-color:white;
-padding:0 14px;
-display:flex;
-align-items:center;
-gap:8px;
 cursor:pointer;
 }
 
-.tab.active{
-background:#0078d4;
+button:hover{
+background:#005a9e;
 }
 
-.tabView{
-position:absolute;
-left:0;
-right:0;
-top:48px;
-bottom:0;
+/* BLOCKS */
+.block{
+padding:8px 0;
 }
 
-iframe{
+.input{
 width:100%;
-height:100%;
-border:none;
+font-size:16px;
+padding:8px;
+border:1px solid #ddd;
+border-radius:6px;
+outline:none;
 }
 
+img{
+max-width:100%;
+border-radius:10px;
+margin-top:10px;
+}
+
+a{
+color:#0078d4;
+}
 </style>
 </head>
-<body>
 
+<body>
 <div id="root"></div>
 
 <script type="text/babel">
 
-const {
-PrimaryButton,
-TextField,
-Checkbox,
-Stack,
-Icon
-} = FluentUIReact;
+/* =========================
+   STORAGE
+========================= */
+function getCode(){
+return new URLSearchParams(location.search).get("code");
+}
 
-const ably =
-new Ably.Realtime(
-"JW3Hvw.fw1o0A:-zV3VatQkBUx-hVmtwFGE6Bwbv_wG4kIoz7LHOKNawY"
+function save(code,data){
+localStorage.setItem("page_"+code,JSON.stringify(data));
+}
+
+function load(code){
+return JSON.parse(localStorage.getItem("page_"+code) || "null");
+}
+
+/* =========================
+   BLOCK COMPONENTS (企業レベル設計)
+========================= */
+
+function TextBlock({value,onChange}){
+
+return(
+<div className="block">
+<input
+className="input"
+value={value}
+onChange={(e)=>onChange(e.target.value)}
+placeholder="テキスト"
+/>
+</div>
 );
 
-const channel =
-ably.channels.get("homepage-builder");
+}
 
+function UrlBlock({value,onChange}){
+
+return(
+<div className="block">
+<input
+className="input"
+value={value}
+onChange={(e)=>onChange(e.target.value)}
+placeholder="URL"
+/>
+
+{value && value.startsWith("http") && (
+<div style={{marginTop:6}}>
+<a href={value} target="_blank">{value}</a>
+</div>
+)}
+
+</div>
+);
+
+}
+
+function ImageBlock({value,onChange}){
+
+function upload(e){
+const file=e.target.files[0];
+if(!file)return;
+
+const reader=new FileReader();
+reader.onload=()=>{
+onChange(reader.result);
+};
+reader.readAsDataURL(file);
+}
+
+return(
+<div className="block">
+
+<input type="file" onChange={upload}/>
+
+{value && (
+<img src={value}/>
+)}
+
+</div>
+);
+
+}
+
+/* =========================
+   APP
+========================= */
 function App(){
 
-const [windows,setWindows] =
-React.useState([
-createBuilder(1)
+const code=getCode();
+const isView=!!code;
+
+const saved=code?load(code):null;
+
+const [title,setTitle]=React.useState(saved?.title||"My Page");
+const [blocks,setBlocks]=React.useState(saved?.blocks||[
+{type:"text",value:""}
 ]);
 
-const [startOpen,setStartOpen] =
-React.useState(false);
+const [publicUrl,setPublicUrl]=React.useState("");
 
-const [popup,setPopup] =
-React.useState(null);
-
-const [tabMode,setTabMode] =
-React.useState(false);
-
-const [activeTab,setActiveTab] =
-React.useState(0);
-const [viewMode,setViewMode] = React.useState(false);
-
+/* SAVE AUTO */
 React.useEffect(()=>{
-const params = new URLSearchParams(location.search);
-const code = params.get("code");
+if(!code)return;
 
-if(code){
-setViewMode(true);
-setTabMode(true); // 強制閲覧UI
-}
-},[]);
+save(code,{title,blocks});
 
-function createBuilder(id){
+},[title,blocks]);
 
-return{
-id,
-type:"builder",
-title:`Homepage Builder (${id})`,
-x:100,
-y:80,
-width:1000,
-height:700,
-minimized:false,
-maximized:false,
-z:id
-};
-
-}
-
-function createMemo(){
-
-return{
-id:Date.now(),
-type:"memo",
-title:"Memo",
-x:140,
-y:100,
-width:900,
-height:600,
-z:999
-};
-
-}
-
-function updateWindow(id,data){
-
-setWindows(prev=>
-prev.map(w=>
-w.id===id
-?
-{...w,...data}
-:
-w
-)
-);
-
-}
-
-function focusWindow(id){
-
-const top =
-Math.max(...windows.map(w=>w.z))+1;
-
-updateWindow(id,{
-z:top
-});
-
-}
-
-function closeWindow(id){
-
-setWindows(prev=>
-prev.filter(w=>w.id!==id)
-);
-
-}
-
-if(tabMode){
-
-return(
-
-<div
-style={{
-width:"100%",
-height:"100%",
-background:"#fff"
-}}
->
-
-<div className="tabs">
-
-{
-
-windows.map((w,i)=>(
-
-<div
-key={w.id}
-style={{
-display:"flex",
-gap:"4px"
-}}
->
-
-<button
-className={
-"tab " +
-(
-activeTab===i
-?
-"active"
-:
-""
-)
-}
-onClick={()=>
-setActiveTab(i)
-}
->
-<Icon
-iconName={
-w.type==="memo"
-?
-"Edit"
-:
-"Globe"
-}
-/>
-{w.title}
-</button>
-
-<button
-className="tab"
-onClick={()=>{
-closeWindow(w.id);
-}}
->
-✕
-</button>
-
-</div>
-
-))
-
-}
-
-<button
-className="tab"
-onClick={()=>{
-setWindows(prev=>[
-...prev,
-createBuilder(prev.length+1)
-]);
-}}
->
-＋
-</button>
-
-<button
-className="tab"
-onClick={()=>
-setTabMode(false)
-}
->
-🗗
-</button>
-
-</div>
-
-<div className="tabView">
-
-{
-
-windows[activeTab] &&
-
-<WindowView
-data={windows[activeTab]}
-updateWindow={updateWindow}
-focusWindow={focusWindow}
-closeWindow={closeWindow}
-setPopup={setPopup}
-tabMode={true}
-/>
-
-}
-
-</div>
-
-</div>
-
-);
-
-}
-
-return(
-
-<div className="desktop">
-
-{
-
-windows
-.sort((a,b)=>a.z-b.z)
-.map(win=>(
-
-!win.minimized &&
-
-<WindowView
-key={win.id}
-data={win}
-updateWindow={updateWindow}
-focusWindow={focusWindow}
-closeWindow={closeWindow}
-setPopup={setPopup}
-/>
-
-))
-
-}
-
-{
-
-popup &&
-
-<Popup
-popup={popup}
-close={()=>
-setPopup(null)
-}
-/>
-
-}
-
-<div className="taskbar">
-
-<button
-className="startBtn"
-onClick={()=>
-setStartOpen(!startOpen)
-}
->
-<Icon iconName="Globe"/>
-</button>
-
-{
-
-startOpen &&
-
-<div className="startMenu">
-
-<button
-className="startItem"
-onClick={()=>{
-setWindows(prev=>[
-...prev,
-createBuilder(prev.length+1)
-]);
-}}
->
-<Icon iconName="Globe"/>
-Homepage Builder
-</button>
-
-<button
-className="startItem"
-onClick={()=>{
-setWindows(prev=>[
-...prev,
-createMemo()
-]);
-}}
->
-<Icon iconName="Edit"/>
-Memo
-</button>
-
-<button
-className="startItem"
-onClick={()=>
-setTabMode(true)
-}
->
-<Icon iconName="BrowsePhotos"/>
-タブモード
-</button>
-
-</div>
-
-}
-
-{
-
-windows.map(win=>(
-
-<button
-key={win.id}
-className="taskBtn"
-onClick={()=>{
-updateWindow(
-win.id,
-{
-minimized:
-!win.minimized
-}
-);
-}}
->
-
-<Icon
-iconName={
-win.type==="memo"
-?
-"Edit"
-:
-"Globe"
-}
-/>
-
-{win.title}
-
-</button>
-
-))
-
-}
-
-</div>
-
-</div>
-
-);
-
-}
-
-function Popup({
-popup,
-close
-}){
-
-const [pos,setPos] =
-React.useState({
-x:popup.x,
-y:popup.y
-});
-
-function drag(e){
-
-const sx=e.clientX;
-const sy=e.clientY;
-
-const ox=pos.x;
-const oy=pos.y;
-
-function move(ev){
-
-setPos({
-x:ox+(ev.clientX-sx),
-y:oy+(ev.clientY-sy)
-});
-
-}
-
-function up(){
-
-removeEventListener("mousemove",move);
-removeEventListener("mouseup",up);
-
-}
-
-addEventListener("mousemove",move);
-addEventListener("mouseup",up);
-
-}
-
-return(
-
-<div
-className="popup"
-style={{
-left:pos.x,
-top:pos.y
-}}
->
-
-<div
-className="popupBar"
-onMouseDown={drag}
->
-
-<div>{popup.title}</div>
-
-<button
-className="windowBtn"
-onClick={close}
->
-✕
-</button>
-
-</div>
-
-<div className="popupContent">
-
-{popup.content}
-
-</div>
-
-</div>
-
-);
-
-}
-
-function WindowView({
-data,
-updateWindow,
-focusWindow,
-closeWindow,
-setPopup,
-tabMode
-}){
-
-function drag(e){
-
-if(tabMode)return;
-
-const sx=e.clientX;
-const sy=e.clientY;
-
-const ox=data.x;
-const oy=data.y;
-
-function move(ev){
-
-updateWindow(
-data.id,
-{
-x:ox+(ev.clientX-sx),
-y:oy+(ev.clientY-sy)
-}
-);
-
-}
-
-function up(){
-
-removeEventListener("mousemove",move);
-removeEventListener("mouseup",up);
-
-}
-
-addEventListener("mousemove",move);
-addEventListener("mouseup",up);
-
-}
-
-function resize(e){
-
-e.stopPropagation();
-
-if(tabMode)return;
-
-const sx=e.clientX;
-const sy=e.clientY;
-
-const ow=data.width;
-const oh=data.height;
-
-function move(ev){
-
-updateWindow(
-data.id,
-{
-width:Math.max(
-450,
-ow+(ev.clientX-sx)
-),
-height:Math.max(
-300,
-oh+(ev.clientY-sy)
-)
-}
-);
-
-}
-
-function up(){
-
-removeEventListener("mousemove",move);
-removeEventListener("mouseup",up);
-
-}
-
-addEventListener("mousemove",move);
-addEventListener("mouseup",up);
-
-}
-
-const style =
-tabMode
-?
-{
-left:0,
-top:0,
-width:"100%",
-height:"100%"
-}
-:
-data.maximized
-?
-{
-left:0,
-top:0,
-width:"100%",
-height:"calc(100% - 52px)",
-zIndex:data.z
-}
-:
-{
-left:data.x,
-top:data.y,
-width:data.width,
-height:data.height,
-zIndex:data.z
-};
-
-return(
-
-<div
-className="window"
-style={style}
-onMouseDown={()=>
-focusWindow(data.id)
-}
->
-
-<div
-className="windowBar"
-onMouseDown={drag}
->
-
-<div className="windowTitle">
-
-<Icon
-iconName={
-data.type==="memo"
-?
-"Edit"
-:
-"Globe"
-}
-/>
-
-{data.title}
-
-</div>
-
-{
-
-!tabMode &&
-
-<div className="windowBtns">
-
-<button
-className="windowBtn"
-onClick={()=>{
-updateWindow(
-data.id,
-{
-minimized:true
-}
-);
-}}
->
-─
-</button>
-
-<button
-className="windowBtn"
-onClick={()=>{
-updateWindow(
-data.id,
-{
-maximized:
-!data.maximized
-}
-);
-}}
->
-□
-</button>
-
-<button
-className="windowBtn"
-onClick={()=>
-closeWindow(data.id)
-}
->
-✕
-</button>
-
-</div>
-
-}
-
-</div>
-
-<div className="windowContent">
-
-{
-
-data.type==="memo"
-
-?
-
-<iframe
-src="https://ayatocraft.github.io/memo"
-></iframe>
-
-:
-
-<HomepageBuilder
-windowData={data}
-updateWindow={updateWindow}
-setPopup={setPopup}
-/>
-
-}
-
-</div>
-
-{
-
-!tabMode
-&&
-!data.maximized
-&&
-
-<div
-className="resize"
-onMouseDown={resize}
-></div>
-
-}
-
-</div>
-
-);
-
-}
-
-function HomepageBuilder({
-windowData,
-updateWindow,
-setPopup
-}){
-
-const [title,setTitle] =
-React.useState("My Homepage");
-
-const [text,setText] =
-React.useState("");
-
-const [items,setItems] =
-React.useState([]);
-
-React.useEffect(()=>{
-
-updateWindow(
-windowData.id,
-{
-title
-}
-);
-
-},[title]);
-
-function addURL(){
-
-const url =
-prompt("URL");
-
-if(!url)return;
-
-const label =
-prompt("表示テキスト");
-
-setItems(prev=>[
-...prev,
-{
-type:"link",
-url,
-label:label || url
-}
-]);
-
-}
-
-function uploadFile(file){
-
-const url = URL.createObjectURL(file);
-
-const baseItem = {
-id:Math.random(),
-url,
-x:100,
-y:100
-};
-
-if(file.type.startsWith("image/")){
-setItems(prev=>[
-...prev,
-{...baseItem,type:"image"}
-]);
-}
-
-else if(file.type.startsWith("video/")){
-setItems(prev=>[
-...prev,
-{...baseItem,type:"video"}
-]);
-}
-
-else{
-setItems(prev=>[
-...prev,
-{...baseItem,type:"file",name:file.name}
-]);
-}
-
-}
-
+/* PUBLISH */
 function publish(){
 
-setPopup({
+const newCode=code||Math.random().toString(36).slice(2);
 
-title:"公開",
-x:300,
-y:100,
+save(newCode,{title,blocks});
 
-content:
-<PublishPopup />
+const url=location.origin+location.pathname+"?code="+newCode;
 
-});
-
+setPublicUrl(url);
+location.search="?code="+newCode;
 }
+
+/* BLOCK UPDATE */
+function updateBlock(i,value){
+const copy=[...blocks];
+copy[i].value=value;
+setBlocks(copy);
+}
+
+/* ADD */
+function addText(){
+setBlocks([...blocks,{type:"text",value:""}]);
+}
+
+function addUrl(){
+setBlocks([...blocks,{type:"url",value:""}]);
+}
+
+/* ADD IMAGE */
+function addImage(){
+setBlocks([...blocks,{type:"image",value:""}]);
+}
+
+/* VIEW MODE */
+if(isView){
 
 return(
-
-<div className="site">
-
-<div className="topbar">
-
 <div>
-Homepage Builder
-</div>
-
-<div
-style={{
-display:"flex",
-gap:"10px"
-}}
->
-
-<PrimaryButton
-text="ファイル"
-onClick={()=>{
-
-setPopup({
-
-title:"ファイル追加",
-x:300,
-y:120,
-
-content:
-<FilePopup
-uploadFile={
-uploadFile
-}
-/>
-
-});
-
-}}
-/>
-
-<PrimaryButton
-text="URL"
-onClick={addURL}
-/>
-
-<PrimaryButton
-text="公開"
-onClick={publish}
-/>
-
-</div>
-
-</div>
 
 <div className="header">
-
-<div className="headerOverlay">
-
-<input
-className="headerTitleInput"
-value={title}
-onChange={(e)=>
-setTitle(e.target.value)
-}
-placeholder="タイトル"
-/>
-
+<h1>{title}</h1>
 </div>
 
-</div>
+<div className="page">
 
-<div className="editor">
+{blocks.map((b,i)=>{
 
-<textarea
-value={text}
-onChange={(e)=>
-setText(e.target.value)
-}
-placeholder="ここに入力"
-></textarea>
-
-<div className="preview">
-
-<div
-style={{
-whiteSpace:"pre-wrap",
-fontSize:"20px",
-lineHeight:"1.8"
-}}
->
-{text}
-</div>
-
-{
-
-items.map((item,i)=>{
-
-if(item.type==="image"){
-
-return(
-<img
-key={i}
-src={item.url}
-/>
-);
-
-}
-
-if(item.type==="video"){
-
-return(
-<video
-key={i}
-src={item.url}
-controls
-></video>
-);
-
-}
-
-if(item.type==="link"){
-
-return(
-<div
-key={i}
-style={{
-marginTop:"14px"
-}}
->
-<a
-href={item.url}
-target="_blank"
-style={{
-color:"#0078d4",
-fontSize:"18px"
-}}
->
-{item.label}
-</a>
-</div>
-);
-
-}
-
-if(item.type==="file"){
-
-return(
+if(b.type==="text"){
+return (
 <div key={i}>
-<a
-href={item.url}
-download={item.name}
-className="downloadBtn"
->
-{item.name}
-</a>
+{b.value}
+</div>
+);
+}
+
+if(b.type==="url"){
+return (
+<div key={i}>
+<a href={b.value} target="_blank">{b.value}</a>
+</div>
+);
+}
+
+if(b.type==="image"){
+return (
+<img key={i} src={b.value}/>
+);
+}
+
+})}
+
+</div>
+
 </div>
 );
 
 }
 
-})
-
-}
-
-</div>
-
-</div>
-
-</div>
-
-);
-
-}
-
-function FilePopup({
-uploadFile
-}){
-
-const [file,setFile] =
-React.useState(null);
-
+/* EDIT MODE */
 return(
+<div>
 
-<Stack
-tokens={{
-childrenGap:10
-}}
->
-
+<div className="header">
 <input
-type="file"
-onChange={(e)=>{
-setFile(
-e.target.files[0]
-);
-}}
+value={title}
+onChange={e=>setTitle(e.target.value)}
 />
+</div>
 
-<PrimaryButton
-text="アップロード"
-onClick={()=>{
-if(file){
-uploadFile(file);
-}
-}}
+<div className="page">
+
+<div className="toolbar">
+
+<button onClick={addText}>テキスト</button>
+<button onClick={addUrl}>URL</button>
+<button onClick={addImage}>画像</button>
+<button onClick={publish}>公開</button>
+
+</div>
+
+{blocks.map((b,i)=>{
+
+if(b.type==="text"){
+return (
+<TextBlock
+key={i}
+value={b.value}
+onChange={(v)=>updateBlock(i,v)}
 />
-
-</Stack>
-
 );
-
 }
 
-function PublishPopup(){
+if(b.type==="url"){
+return (
+<UrlBlock
+key={i}
+value={b.value}
+onChange={(v)=>updateBlock(i,v)}
+/>
+);
+}
 
-const [viewPassEnabled,
-setViewPassEnabled] =
-React.useState(false);
+if(b.type==="image"){
+return (
+<ImageBlock
+key={i}
+value={b.value}
+onChange={(v)=>updateBlock(i,v)}
+/>
+);
+}
 
-const [editPassEnabled,
-setEditPassEnabled] =
-React.useState(false);
+})}
 
-const [viewPass,
-setViewPass] =
-React.useState("");
+</div>
 
-const [editPass,
-setEditPass] =
-React.useState("");
-
-const [url,setUrl] =
-React.useState("");
-
-function publish(){
-
-const code =
-Math.random()
-.toString(36)
-.substring(2)
-+
-Math.random()
-.toString(36)
-.substring(2);
-
-setUrl(
-location.origin +
-location.pathname +
-"?code=" +
-code
+</div>
 );
 
 }
 
-return(
-
-<Stack
-tokens={{
-childrenGap:12
-}}
->
-
-<Checkbox
-label="閲覧パスワードON"
-checked={viewPassEnabled}
-onChange={(e,v)=>
-setViewPassEnabled(v)
-}
-/>
-
-{
-
-viewPassEnabled &&
-
-<TextField
-label="閲覧パスワード"
-value={viewPass}
-onChange={(e,v)=>
-setViewPass(v || "")
-}
-/>
-
-}
-
-<Checkbox
-label="編集パスワードON"
-checked={editPassEnabled}
-onChange={(e,v)=>
-setEditPassEnabled(v)
-}
-/>
-
-{
-
-editPassEnabled &&
-
-<TextField
-label="編集パスワード"
-value={editPass}
-onChange={(e,v)=>
-setEditPass(v || "")
-}
-/>
-
-}
-
-<PrimaryButton
-text="公開"
-onClick={publish}
-/>
-
-{
-
-url &&
-
-<TextField
-label="公開URL"
-value={url}
-readOnly
-/>
-
-}
-
-</Stack>
-
-);
-
-}
-
-ReactDOM.createRoot(
-document.getElementById("root")
-).render(<App/>);
+ReactDOM.createRoot(document.getElementById("root"))
+.render(<App/>);
 
 </script>
 
