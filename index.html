@@ -9,6 +9,8 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
 <style>
 body{
 margin:0;
@@ -87,6 +89,11 @@ color:#0078d4;
 word-break:break-all;
 }
 
+.urlBox{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
 </style>
 </head>
 
@@ -96,86 +103,27 @@ word-break:break-all;
 <script type="text/babel">
 
 /* =========================
+   ABLY
+========================= */
+const ably = new Ably.Realtime(
+"JW3Hvw.fw1o0A:-zV3VatQkBUx-hVmtwFGE6Bwbv_wG4kIoz7LHOKNawY"
+);
+
+const channel = ably.channels.get("homepage-builder");
+
+/* =========================
    STORAGE
 ========================= */
 function getCode(){
 return new URLSearchParams(location.search).get("code");
 }
 
-function save(code,data){
+function saveLocal(code,data){
 localStorage.setItem("page_"+code,JSON.stringify(data));
 }
 
-function load(code){
+function loadLocal(code){
 return JSON.parse(localStorage.getItem("page_"+code)||"null");
-}
-
-/* =========================
-   BLOCKS
-========================= */
-
-function TextBlock({value,onChange}){
-
-return(
-<div className="block">
-<input
-className="input"
-value={value}
-onChange={(e)=>onChange(e.target.value)}
-placeholder="テキスト"
-/>
-</div>
-);
-
-}
-
-function UrlBlock({value,onChange}){
-
-return(
-<div className="block">
-<input
-className="input"
-value={value}
-onChange={(e)=>onChange(e.target.value)}
-placeholder="URL"
-/>
-
-{value && value.startsWith("http") && (
-<div style={{marginTop:6}}>
-<a href={value} target="_blank">{value}</a>
-</div>
-)}
-
-</div>
-);
-
-}
-
-function ImageBlock({value,onChange}){
-
-function upload(e){
-const file=e.target.files[0];
-if(!file)return;
-
-const reader=new FileReader();
-reader.onload=()=>{
-onChange(reader.result);
-};
-reader.readAsDataURL(file);
-}
-
-return(
-<div className="block">
-
-<input type="file" onChange={upload}/>
-
-{value && (
-<img src={value}/>
-)}
-
-</div>
-);
-
 }
 
 /* =========================
@@ -183,10 +131,10 @@ return(
 ========================= */
 function App(){
 
-const code=getCode();
-const isView=!!code;
+const code = getCode();
+const isView = !!code;
 
-const saved=code?load(code):null;
+const saved = code ? loadLocal(code) : null;
 
 const [title,setTitle]=React.useState(saved?.title||"My Page");
 const [blocks,setBlocks]=React.useState(saved?.blocks||[
@@ -197,27 +145,51 @@ const [editing,setEditing]=React.useState(!isView);
 const [publicUrl,setPublicUrl]=React.useState("");
 
 /* =========================
-   AUTO SAVE
+   LOAD FROM ABLY (公開データ取得)
 ========================= */
 React.useEffect(()=>{
-if(!code)return;
-save(code,{title,blocks});
+
+if(!code) return;
+
+/* リクエスト */
+channel.publish("request-load",{code});
+
+/* レスポンス受信 */
+const handler = (msg)=>{
+
+setTitle(msg.data.title || "My Page");
+setBlocks(msg.data.blocks || []);
+
+saveLocal(code,msg.data);
+};
+
+channel.subscribe("response-"+code,handler);
+
+return ()=>channel.unsubscribe("response-"+code,handler);
+
+},[]);
+
+/* =========================
+   AUTO SAVE LOCAL
+========================= */
+React.useEffect(()=>{
+if(!code) return;
+saveLocal(code,{title,blocks});
 },[title,blocks]);
 
 /* =========================
-   E KEY SWITCH
+   E KEY TOGGLE
 ========================= */
 React.useEffect(()=>{
 
 function onKey(e){
 
 const el=document.activeElement;
-const typing=
+const typing =
 el &&
-(el.tagName==="INPUT" ||
-el.tagName==="TEXTAREA");
+(el.tagName==="INPUT" || el.tagName==="TEXTAREA");
 
-if(typing)return;
+if(typing) return;
 
 if(e.key.toLowerCase()==="e"){
 setEditing(v=>!v);
@@ -230,7 +202,7 @@ return ()=>window.removeEventListener("keydown",onKey);
 },[]);
 
 /* =========================
-   UPDATE BLOCK
+   BLOCK UPDATE
 ========================= */
 function updateBlock(i,value){
 const copy=[...blocks];
@@ -246,23 +218,49 @@ setBlocks([...blocks,{type:"text",value:""}]);
 }
 
 function addUrl(){
-setBlocks([...blocks,{type:"url",value:""}]);
+const url=prompt("URL");
+if(!url) return;
+setBlocks([...blocks,{type:"url",value:url}]);
 }
 
 function addImage(){
-setBlocks([...blocks,{type:"image",value:""}]);
+const input=document.createElement("input");
+input.type="file";
+
+input.onchange=(e)=>{
+const file=e.target.files[0];
+if(!file) return;
+
+const reader=new FileReader();
+reader.onload=()=>{
+setBlocks([...blocks,{
+type:"image",
+value:reader.result
+}]);
+};
+reader.readAsDataURL(file);
+};
+
+input.click();
 }
 
 /* =========================
-   PUBLISH
+   PUBLISH (Ably)
 ========================= */
 function publish(){
 
-const newCode=code||Math.random().toString(36).slice(2);
+const newCode = code || Math.random().toString(36).slice(2);
 
-save(newCode,{title,blocks});
+const data = {title,blocks};
 
-const url=location.origin+location.pathname+"?code="+newCode;
+/* local */
+saveLocal(newCode,data);
+
+/* Ably save */
+channel.publish("save-"+newCode,data);
+
+/* URL */
+const url = location.origin+location.pathname+"?code="+newCode;
 
 setPublicUrl(url);
 location.search="?code="+newCode;
@@ -297,9 +295,7 @@ return (
 }
 
 if(b.type==="image"){
-return (
-<img key={i} src={b.value}/>
-);
+return <img key={i} src={b.value}/>;
 }
 
 })}
@@ -338,42 +334,50 @@ onChange={e=>setTitle(e.target.value)}
 
 if(b.type==="text"){
 return (
-<TextBlock
+<input
 key={i}
+className="input"
 value={b.value}
-onChange={(v)=>updateBlock(i,v)}
+onChange={e=>updateBlock(i,e.target.value)}
+placeholder="テキスト"
 />
 );
 }
 
 if(b.type==="url"){
 return (
-<UrlBlock
-key={i}
+<div key={i}>
+<input
+className="input"
 value={b.value}
-onChange={(v)=>updateBlock(i,v)}
+onChange={e=>updateBlock(i,e.target.value)}
+placeholder="URL"
 />
+
+{b.value && (
+<a href={b.value} target="_blank">
+{b.value}
+</a>
+)}
+
+</div>
 );
 }
 
 if(b.type==="image"){
 return (
-<ImageBlock
-key={i}
-value={b.value}
-onChange={(v)=>updateBlock(i,v)}
-/>
+<img key={i} src={b.value}/>
 );
 }
 
 })}
 
 {publicUrl && (
-<div style={{marginTop:10,display:"flex",gap:10}}>
+<div className="urlBox">
 <input style={{flex:1}} value={publicUrl} readOnly/>
 <button onClick={()=>{
 navigator.clipboard.writeText(publicUrl);
-alert("コピー");
+alert("コピーした");
 }}>
 コピー
 </button>
